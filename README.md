@@ -1,2 +1,2 @@
 # highlite_scraper
-Scraper pobieraj¹cy informacje na temat produktów ze strony highlite.nl. Zwraca obiekt JSON z niezbêdnymi danymi.
+Scraper pobierajÄ…cy informacje na temat produktÃ³w ze strony highlite.nl. Zwraca obiekt JSON z niezbÄ™dnymi danymi.

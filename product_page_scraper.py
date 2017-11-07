@@ -10,20 +10,25 @@ import json
 
 class PageScraper:
 
-    def __init__(self, file_with_products_url, log_in=False):
+    def __init__(self, file_with_products_url, log_in=False, file_is_json_dump=True):
         self.file_with_products_url = file_with_products_url
-        self.product_urls = []
+        self.product_urls = {}
         self.scraped_products = []
         self.session = None
         self.soup = None
         self.log_in = log_in
+        self.file_is_json_dump = file_is_json_dump
 
     def get_urls_from_file(self):
-        file = open(self.file_with_products_url, 'r')
-        file = [i for i in file.read().split('\n')]
-        file = [i.split(',')[1].strip() for i in file if 'Error' not in i]
-        self.product_urls = file
-        #  random.shuffle(self.product_urls)
+        with open(self.file_with_products_url, 'r') as file:
+            if self.file_is_json_dump:
+                data = json.loads(file.read())
+                self.product_urls = data
+            else:
+                urls = [i for i in file.read().split('\n')]
+                urls = [i.split(',')[1].strip() for i in urls if 'Error' not in i]
+                self.product_urls = urls
+                #  random.shuffle(self.product_urls)
 
     def login_to_highlite(self, login, password):
         with requests.Session() as session:
@@ -32,15 +37,15 @@ class PageScraper:
             headers.update({'User-Agent': 'I\'m friendly. I\'m scraping some info about you\'r products. '
                                           'Contact: BLASK (Poland), Michael Dabrowski (I\'m your customer).'})
             self.session.headers = headers
-            if self.log_in == True:
+            if self.log_in:
                 login_payload = {'Login': login, 'Password': password}
                 login_url = "http://www.highlite.nl/user/login"
                 self.session.post(login_url, data=login_payload)
 
     def create_soup(self, url):
-        if self.log_in == True:
+        if self.log_in:
             response = self.session.get(url)
-        elif self.log_in == False:
+        else:
             headers = requests.utils.default_headers()
             headers.update({'User-Agent': 'I\'m friendly. I\'m scraping some info about you\'r products. '
                                           'Contact: BLASK (Poland), Michael Dabrowski (I\'m your customer).'})
@@ -176,7 +181,7 @@ class PageScraper:
         count = 1
         self.get_urls_from_file()
         self.login_to_highlite('login', 'password')
-        for url in self.product_urls:
+        for code, url in self.product_urls.items():
             self.create_soup(url)
             product = self.create_product_object()
             self.scraped_products.append(product.__dict__)

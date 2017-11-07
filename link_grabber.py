@@ -5,26 +5,23 @@ import html
 from bs4 import BeautifulSoup
 import random
 import time
-from product import Produkt
-from product_page_scraper import PageScraper
+import json
 
 class ProductsLinkGrabber:
     """
     Grabs links to products using product codes. Works with highlite.nl
-    Needs product codes (file)
-    Saves a file 'missing_products_links.txt'
+    Needs product codes
     """
-    def __init__(self, file_with_product_codes):
-        self.missing_items_codes = []
+    def __init__(self, missing_items_codes):
+        self.missing_items_codes = missing_items_codes
         self.session = None
-        self.missing_items_links = []
-        self.file_with_product_codes = file_with_product_codes
+        self.missing_items_links = {}
 
-    def update_missing_items_codes_from_file(self):
-        file = open(self.file_with_product_codes, 'r')
-        file = [i for i in file.read().split('\n')]
-        self.missing_items_codes = file
-        #  random.shuffle(self.missing_items_codes)
+    def update_missing_items_codes_from_file(self, file_with_product_codes):
+        with open(file_with_product_codes, 'r') as file:
+            file = [i for i in file.read().split('\n')]
+            self.missing_items_codes = file
+            #  random.shuffle(self.missing_items_codes)
 
     def json_search_for_product_link(self, product_code):
         time.sleep(random.uniform(1, 3))
@@ -44,7 +41,7 @@ class ProductsLinkGrabber:
             response_code = element.text
             if response_code == product_code:
                 link = element.get('href')
-                link = str(product_code) + ', ' + "http://www.highlite.nl" + link
+                link = "http://www.highlite.nl" + link
                 print('Getting link: ' + link)
                 return link
         link = 'Error retrieving data for ' + str(product_code)
@@ -52,19 +49,19 @@ class ProductsLinkGrabber:
 
     def save_missing_products_links_to_file(self):
         with open('missing_products_links.txt', 'w') as file:
-            for link in self.missing_items_links:
-                file.write(link + '\n')
+            data = json.dumps(self.missing_items_links)
+            file.write(data)
 
     def main(self):
         count = 1
-        self.update_missing_items_codes_from_file()
         for code in self.missing_items_codes:
             print("Code " + str(count) + ' from ' + str(len(self.missing_items_codes)))
             link = self.json_search_for_product_link(code)
-            self.missing_items_links.append(link)
+            self.missing_items_links[code] = link
             self.save_missing_products_links_to_file()
             count += 1
 
 if __name__ == "__main__":
-    u = ProductsLinkGrabber('missing_items.txt')
+    u = ProductsLinkGrabber([''])
+    # u.update_missing_items_codes_from_file('file_with_codes.txt')
     u.main()
